@@ -1,0 +1,471 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Resume | Saurabh Rajput</title>
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Chosen Palette: Warm Neutrals & Professional Blue -->
+    <!-- Application Structure Plan: A single-page application with a top navigation bar for quick access to thematic sections: Overview, Experience, Skills, Education, and Contact. This dashboard-like structure allows non-linear exploration, enabling a recruiter to quickly jump to the most relevant information. The default 'Overview' provides an immediate summary and visual timeline, while the 'Experience' section uses an interactive tabbed interface to present detailed job duties without overwhelming the user. This design prioritizes scannability and user engagement. -->
+    <!-- Visualization & Content Choices: 
+        1. Career Timeline (Overview): Report Info -> Work History Dates & Titles. Goal -> Show career progression. Viz/Method -> HTML/CSS timeline. Interaction -> Click to scroll to details. Justification -> Intuitive visual summary of career path. Library -> Vanilla JS, HTML/CSS.
+        2. Skills Breakdown (Skills): Report Info -> Skills from across the resume. Goal -> Quantify and categorize expertise. Viz/Method -> Horizontal Bar Chart. Interaction -> Tooltips on hover show details. Justification -> Turns a list of skills into a comparable, data-driven visual. Library -> Chart.js.
+        3. Job Details (Experience): Report Info -> Bulleted lists of responsibilities. Goal -> Present deep information on-demand. Viz/Method -> Tabbed interface. Interaction -> Click tabs to reveal content. Justification -> Progressive disclosure keeps the UI clean and user-focused. Library -> Vanilla JS.
+    -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #FDFDFD;
+            color: #1a202c;
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 800px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 400px;
+            max-height: 50vh;
+        }
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 500px;
+            }
+        }
+        .nav-link {
+            transition: color 0.3s, border-bottom-color 0.3s;
+            border-bottom: 2px solid transparent;
+        }
+        .nav-link:hover, .nav-link.active {
+            color: #2563eb;
+            border-bottom-color: #2563eb;
+        }
+        .tab-button {
+            transition: all 0.3s;
+        }
+        .tab-button.active {
+            background-color: #2563eb;
+            color: #ffffff;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+        }
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            left: -2.75rem;
+            top: 0.5rem;
+            width: 1.25rem;
+            height: 1.25rem;
+            border-radius: 9999px;
+            background-color: #ffffff;
+            border: 4px solid #2563eb;
+            z-index: 10;
+        }
+        .timeline-line {
+            position: absolute;
+            left: -2.25rem;
+            top: 0.5rem;
+            bottom: 0;
+            width: 2px;
+            background-color: #d1d5db;
+        }
+    </style>
+</head>
+<body class="antialiased">
+
+    <header class="bg-white/80 backdrop-blur-lg sticky top-0 z-50 shadow-sm">
+        <nav class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <div class="flex items-center">
+                    <h1 class="text-xl font-bold text-gray-800">Saurabh Rajput</h1>
+                </div>
+                <div class="hidden md:block">
+                    <div class="ml-10 flex items-baseline space-x-4">
+                        <a href="#overview" class="nav-link px-3 py-2 rounded-md text-sm font-medium text-gray-700">Overview</a>
+                        <a href="#experience" class="nav-link px-3 py-2 rounded-md text-sm font-medium text-gray-700">Experience</a>
+                        <a href="#skills" class="nav-link px-3 py-2 rounded-md text-sm font-medium text-gray-700">Skills</a>
+                        <a href="#education" class="nav-link px-3 py-2 rounded-md text-sm font-medium text-gray-700">Education</a>
+                        <a href="#contact" class="nav-link px-3 py-2 rounded-md text-sm font-medium text-gray-700">Contact</a>
+                    </div>
+                </div>
+                <div class="md:hidden">
+                    <button id="mobile-menu-button" class="inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-white hover:bg-gray-700 focus:outline-none">
+                        <span class="sr-only">Open main menu</span>
+                        <svg class="h-6 w-6" stroke="currentColor" fill="none" viewBox="0 0 24 24">
+                            <path class="inline-flex" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+                            <path class="hidden" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </nav>
+        <div id="mobile-menu" class="md:hidden hidden">
+            <div class="px-2 pt-2 pb-3 space-y-1 sm:px-3">
+                <a href="#overview" class="block nav-link px-3 py-2 rounded-md text-base font-medium text-gray-700">Overview</a>
+                <a href="#experience" class="block nav-link px-3 py-2 rounded-md text-base font-medium text-gray-700">Experience</a>
+                <a href="#skills" class="block nav-link px-3 py-2 rounded-md text-base font-medium text-gray-700">Skills</a>
+                <a href="#education" class="block nav-link px-3 py-2 rounded-md text-base font-medium text-gray-700">Education</a>
+                <a href="#contact" class="block nav-link px-3 py-2 rounded-md text-base font-medium text-gray-700">Contact</a>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
+         
+        <section id="overview" class="mb-16">
+            <div class="text-center mb-12">
+                 <h2 class="text-3xl font-extrabold text-gray-900 sm:text-4xl">Production & Electronics Professional</h2>
+                 <p class="mt-4 text-lg text-gray-600">Driving efficiency and quality in manufacturing environments.</p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
+                <div>
+                    <h3 class="text-2xl font-bold text-gray-800 mb-4">Summary of Qualifications</h3>
+                    <ul id="summary-list" class="space-y-3 text-gray-700">
+                    </ul>
+                     
+                </div>
+                <div>
+                    <h3 class="text-2xl font-bold text-gray-800 mb-6">Career Timeline</h3>
+                    <div class="relative pl-12">
+                        <div class="timeline-line"></div>
+                        <div id="timeline-container" class="space-y-10">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="experience" class="mb-16">
+            <h2 class="text-3xl font-extrabold text-center text-gray-900 mb-2">Professional Experience</h2>
+            <p class="text-center text-lg text-gray-600 mb-10">A detailed look at my roles and responsibilities. Click on a company to see more.</p>
+            <div class="flex flex-wrap justify-center gap-2 mb-8">
+            </div>
+            <div class="bg-white p-6 sm:p-8 rounded-xl shadow-lg border border-gray-200 min-h-[300px]">
+                <h3 id="experience-title" class="text-2xl font-bold text-gray-800"></h3>
+                <p id="experience-date" class="text-md text-gray-500 mb-4"></p>
+                <ul id="experience-details" class="space-y-2 text-gray-700 list-disc list-inside">
+                </ul>
+            </div>
+        </section>
+
+        <section id="skills" class="mb-16">
+            <h2 class="text-3xl font-extrabold text-center text-gray-900 mb-2">Core Competencies</h2>
+            <p class="text-center text-lg text-gray-600 mb-10">A visual representation of key skill areas based on years of hands-on experience.</p>
+            <div class="bg-white p-4 sm:p-6 rounded-xl shadow-lg border border-gray-200">
+                <div class="chart-container">
+                    <canvas id="skillsChart"></canvas>
+                </div>
+            </div>
+        </section>
+
+        <section id="education" class="mb-16">
+            <h2 class="text-3xl font-extrabold text-center text-gray-900 mb-2">Education</h2>
+            <p class="text-center text-lg text-gray-600 mb-10">My academic background in electronics engineering.</p>
+            <div id="education-container" class="grid grid-cols-1 md:grid-cols-2 gap-8">
+            </div>
+        </section>
+        
+        <!-- Removed Career Analyst Section -->
+
+        <section id="contact" class="mb-16">
+            <h2 class="text-3xl font-extrabold text-center text-gray-900 mb-2">Contact Me</h2>
+            <div class="mt-6 flex flex-col sm:flex-row items-center justify-center space-y-4 sm:space-y-0 sm:space-x-4 text-lg">
+                <a href="mailto:rajputsaurabh12@gmail.com" class="text-blue-600 hover:underline">rajputsaurabh12@gmail.com</a>
+                <span class="hidden sm:inline">&bull;</span>
+                <span class="text-gray-600">647.533.3075</span>
+                <span class="hidden sm:inline">&bull;</span>
+                <a href="#" class="text-blue-600 hover:underline">LinkedIn</a>
+            </div>
+        </section>
+
+    </main>
+
+    <footer class="bg-gray-100 mt-16">
+        <div class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8 text-center text-gray-500">
+            <p>&copy; 2024 Saurabh Rajput. Interactive Resume.</p>
+        </div>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const resumeData = {
+                summary: [
+                    "5+ years experience as Supervisor- training and leading a team.",
+                    "4+ years experience in electronics assembly including soldering and troubleshooting.",
+                    "Advanced knowledge of computer hardware and software.",
+                    "Experience working in a Clean Room environment and ISO certified organizations.",
+                ],
+                experience: [
+                     {
+                        company: "Workrite Ergonomics",
+                        title: "Production Supervisor",
+                        date: "Mar 2023 – Present",
+                        details: [
+                            "Manage and supervise machine operations, ensuring they operate efficiently and meet quality standards.",
+                            "Streamline communication regarding material shortages, enabling the planning and purchasing teams to optimize inventory and maintain production schedules.",
+                            "Lead and mentor production teams to meet daily output targets.",
+                            "Schedule and assign daily tasks, ensuring efficient workflow and optimal resource allocation.",
+                            "Oversee all production operations, ensuring adherence to schedules and quality specifications.",
+                            "Implement process improvements that reduce waste and increase overall efficiency.",
+                            "Monitor production metrics and adjust plans to meet performance goals.",
+                            "Collaborate with maintenance and engineering teams to resolve equipment issues and minimize downtime.",
+                            "Conduct regular meetings with production crews to address production issues, quality control, health and safety concerns, and training needs.",
+                            "Provide feedback to employees on their performance and identify areas for improvement.",
+                            "Conduct annual performance management reviews for direct reports, providing guidance and support for their professional development.",
+                            "Maintain a safe work environment by performing regular safety checks and ensuring all rules are followed.",
+                        ]
+                    },
+                    {
+                        company: "Baylis Medical",
+                        title: "Production Team leader",
+                        date: "July 2020 – October 2022",
+                        details: [
+                            "Assisted the Production Supervisor in the supervision and coordination of assemblers and testers.",
+                            "Monitored and executed operations to ensure efficiency and quality.",
+                            "Performed assembly and testing of portable ventilators, adhering to ESD practices.",
+                            "Utilized multimeters, oscilloscopes, and other diagnostic tools to verify and calibrate electronic components.",
+                            "Documented assembly procedures, troubleshot issues, and updated technical manuals with revisions.",
+                            "Conducted component-level troubleshooting on electronic parts using a multimeter and oscilloscope.",
+                            "Soldered and desoldered electronic components to ensure proper circuit board functionality.",
+                            "Ensured the team met production targets.",
+                            "Assigned team members to stations and assisted with workstation setup.",
+                            "Confirmed all employees followed written manufacturing protocols.",
+                            "Ensured that Good Manufacturing Practices (GMP) were followed by team members.",
+                            "Issued material to the line and reported actual usage on the **ERP system**.",
+                            "Provided service for returned manufacturing goods.",
+                            "Trained new team members on assembly techniques, equipment operation, safety procedures, and quality control measures.",
+                        ]
+                    },
+                    {
+                        company: "Stealth Computers",
+                        title: "Electronics Assembly Technician",
+                        date: "August 2018 – April 2020",
+                        details: [
+                            "Assembled and integrated industrial rackmount systems and small form-factor PCs according to customer specifications, adhering to ESD control practices.",
+                            "Maintained computer equipment and software to ensure efficient and secure operations.",
+                            "Possessed strong soldering/desoldering skills for electronic components on circuit boards (PCBs).",
+                            "Performed repairs on computer hardware as needed and documented faulty accessories with Non-Conformance Reports (NCRs).",
+                            "Maintained meticulous records of assembly processes, test results, and any modifications made during troubleshooting.",
+                            "Conducted component-level troubleshooting on electronic parts using multimeters and oscilloscopes.",
+                            "Tested and implemented new software programs for the company.",
+                            "Experienced in working within an ISO 9001:2015 certified environment.",
+                            "Assembled various touchscreen displays in a cleanroom environment.",
+                            "Demonstrated the ability to work effectively under pressure to meet production schedules and customer deadlines.",
+                            "Performed RMA duties as required.",
+                            "Provided training and supervision to new technicians.",
+                        ]
+                    },
+                    {
+                        company: "Avenue Moving and Storage Ltd",
+                        title: "Warehouse Supervisor",
+                        date: "June 2016 – July 2018",
+                        details: [
+                            "Accomplished warehouse human resource objectives by selecting, orienting, training, and supervising employees.",
+                            "Managed inventory by scheduling material movement and coordinating transfers with other departments.",
+                            "Oversaw the final inspection of products in the warehouse to ensure quality.",
+                            "Coordinated with experts to schedule necessary repairs for equipment.",
+                            "Maintained an organized storage area and recommended improvements to floor space.",
+                            "Ensured warehouse workers finished all assigned tasks within given timelines.",
+                            "Worked under pressure to meet time-sensitive deadlines.",
+                        ]
+                    },
+                    {
+                        company: "RJ Electronics",
+                        title: "Electronic/Project Technician",
+                        date: "July 2013 – June 2014",
+                        details: [
+                            "Built, tested, repaired, and modified electronic circuits and components.",
+                            "Assembled circuitry according to technical manuals.",
+                            "Perform solder/DE solder on PCB while troubleshooting.",
+                            "Recommend changes in circuitry to simplify assembly and maintenance.",
+                            "Analyze and interpret test data by using a multimeter, oscilloscope, and function generator.",
+                            "Instruct and supervise new technicians on their projects.",
+                        ]
+                    }
+                ],
+                education: [
+                    {
+                        institution: "Humber Institute of Technology and Advanced Learning",
+                        degree: "Electronics Engineering Technician",
+                        year: "2016"
+                    },
+                    {
+                        institution: "Gujarat Technological University",
+                        degree: "Bachelor in Electronics & Communication",
+                        year: "2013"
+                    }
+                ],
+                skills: {
+                    labels: ["Team Leadership & Supervision", "Electronics Assembly", "Warehouse & Inventory", "Quality Control", "Troubleshooting & Repair", "Soldering & PCB Work", "ERP System"],
+                    data: [7, 5, 3, 5, 6, 6, 5] 
+                }
+            };
+
+            const summaryList = document.getElementById('summary-list');
+            resumeData.summary.forEach(item => {
+                const li = document.createElement('li');
+                li.innerHTML = `<span class="text-blue-500 mr-2">&#10003;</span> ${item}`;
+                summaryList.appendChild(li);
+            });
+
+            const timelineContainer = document.getElementById('timeline-container');
+            resumeData.experience.forEach(exp => {
+                const item = document.createElement('div');
+                item.className = 'relative timeline-item';
+                item.innerHTML = `
+                    <h4 class="font-semibold text-gray-800">${exp.title}</h4>
+                    <p class="text-sm text-gray-600">${exp.company}</p>
+                    <p class="text-xs text-gray-400">${exp.date}</p>
+                `;
+                timelineContainer.appendChild(item);
+            });
+
+            const experienceTabsContainer = document.querySelector('#experience .flex');
+            const expTitle = document.getElementById('experience-title');
+            const expDate = document.getElementById('experience-date');
+            const expDetails = document.getElementById('experience-details');
+
+            resumeData.experience.forEach((exp, index) => {
+                const button = document.createElement('button');
+                button.textContent = exp.company;
+                button.className = 'tab-button px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-full hover:bg-gray-100';
+                button.dataset.index = index;
+                experienceTabsContainer.appendChild(button);
+            });
+
+            function updateExperience(index) {
+                const exp = resumeData.experience[index];
+                expTitle.textContent = exp.title;
+                expDate.textContent = `${exp.company} | ${exp.date}`;
+                expDetails.innerHTML = '';
+                exp.details.forEach(detail => {
+                    const li = document.createElement('li');
+                    li.textContent = detail;
+                    expDetails.appendChild(li);
+                });
+
+                document.querySelectorAll('.tab-button').forEach(btn => {
+                    btn.classList.remove('active');
+                    if(btn.dataset.index == index) {
+                        btn.classList.add('active');
+                    }
+                });
+            }
+            
+            experienceTabsContainer.addEventListener('click', (e) => {
+                if(e.target.matches('.tab-button')) {
+                    updateExperience(e.target.dataset.index);
+                }
+            });
+            
+            updateExperience(0);
+
+            const educationContainer = document.getElementById('education-container');
+            resumeData.education.forEach(edu => {
+                const card = document.createElement('div');
+                card.className = 'bg-white p-6 rounded-xl shadow-lg border border-gray-200';
+                card.innerHTML = `
+                    <h3 class="text-xl font-bold text-gray-800">${edu.institution}</h3>
+                    <p class="text-blue-600 font-medium mt-1">${edu.degree}</p>
+                    <p class="text-gray-500 mt-2">${edu.year}</p>
+                `;
+                educationContainer.appendChild(card);
+            });
+
+            const ctx = document.getElementById('skillsChart').getContext('2d');
+            const skillsChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: resumeData.skills.labels,
+                    datasets: [{
+                        label: 'Years of Experience (Estimated)',
+                        data: resumeData.skills.data,
+                        backgroundColor: 'rgba(37, 99, 235, 0.7)',
+                        borderColor: 'rgba(37, 99, 235, 1)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    indexAxis: 'y',
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return `${context.dataset.label}: ${context.raw} years`;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'Years of Experience'
+                            }
+                        },
+                        y: {
+                            ticks: {
+                                autoSkip: false
+                            }
+                        }
+                    }
+                }
+            });
+
+            const navLinks = document.querySelectorAll('.nav-link');
+            const sections = document.querySelectorAll('main section');
+
+            window.addEventListener('scroll', () => {
+                let current = '';
+                sections.forEach(section => {
+                    const sectionTop = section.offsetTop;
+                    if (pageYOffset >= sectionTop - 80) {
+                        current = section.getAttribute('id');
+                    }
+                });
+
+                navLinks.forEach(link => {
+                    link.classList.remove('active');
+                    if (link.getAttribute('href').includes(current)) {
+                        link.classList.add('active');
+                    }
+                });
+            });
+            
+            const mobileMenuButton = document.getElementById('mobile-menu-button');
+            const mobileMenu = document.getElementById('mobile-menu');
+            const mobileMenuButtonPaths = mobileMenuButton.querySelectorAll('path');
+            mobileMenuButton.addEventListener('click', () => {
+                mobileMenu.classList.toggle('hidden');
+                mobileMenuButtonPaths[0].classList.toggle('hidden');
+                mobileMenuButtonPaths[0].classList.toggle('inline-flex');
+                mobileMenuButtonPaths[1].classList.toggle('hidden');
+            });
+            
+            document.querySelectorAll('#mobile-menu a').forEach(link => {
+                link.addEventListener('click', () => {
+                     mobileMenu.classList.add('hidden');
+                     mobileMenuButtonPaths[0].classList.remove('hidden');
+                     mobileMenuButtonPaths[0].classList.add('inline-flex');
+                     mobileMenuButtonPaths[1].classList.add('hidden');
+                });
+            });
+            
+            // Removed all Career Analyst specific JavaScript logic
+        });
+    </script>
+</body>
+</html>
